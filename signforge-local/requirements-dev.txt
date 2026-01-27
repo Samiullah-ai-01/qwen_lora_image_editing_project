@@ -1,0 +1,32 @@
+# Include production requirements
+-r requirements.txt
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+
+# Linting and formatting
+ruff>=0.1.0
+black>=23.0.0
+mypy>=1.7.0
+pre-commit>=3.6.0
+
+# Type stubs
+types-PyYAML
+types-requests
+types-Pillow
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.5.0
+
+# E2E testing
+playwright>=1.40.0
+
+# Development utilities
+ipython>=8.0.0
+rich>=13.0.0
+
+-e .

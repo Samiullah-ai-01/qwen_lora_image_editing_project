@@ -1,0 +1,161 @@
+# SignForge Local - Main Application Configuration
+# This file contains the primary configuration for the application
+
+app:
+  name: signforge-local
+  version: "0.1.0"
+  debug: false
+  log_level: INFO
+
+# Model configuration
+model:
+  # Path to the base model directory
+  base_path: models/base/sdxl-base-1.0
+  
+  # Model identifier for HuggingFace download
+  hf_model_id: stabilityai/stable-diffusion-xl-base-1.0
+  
+  # Data type for model weights
+  # Options: bf16, fp16, fp32
+  # bf16 is preferred if GPU supports it (Ampere+)
+  dtype: bf16
+  
+  # Enable xformers memory efficient attention if available
+  use_xformers: true
+  
+  # Enable attention slicing for memory efficiency
+  attention_slicing: auto  # auto, max, or integer
+  
+  # Enable VAE tiling for large images
+  vae_tiling: false
+  
+  # Enable CPU offload for low VRAM situations
+  cpu_offload: false
+
+# Inference configuration
+inference:
+  # Maximum number of requests in queue
+  max_queue_size: 10
+  
+  # Request timeout in seconds
+  timeout_seconds: 120
+  
+  # Default generation parameters
+  default_steps: 30
+  default_guidance_scale: 7.5
+  default_width: 1024
+  default_height: 768
+  
+  # Scheduler
+  scheduler: euler_a  # euler_a, ddim, dpm++, pndm
+  
+  # Maximum resolution (width * height)
+  max_resolution: 2097152  # 2048 * 1024
+  
+  # Random seed (-1 for random)
+  default_seed: -1
+
+# LoRA configuration
+lora:
+  # Directory containing LoRA adapters
+  base_dir: models/loras
+  
+  # Cache directory for loaded adapters
+  cache_dir: models/adapters_cache
+  
+  # Maximum adapters to keep in memory
+  max_cached: 10
+  
+  # Default adapter weights by domain
+  default_weights:
+    sign_type: 1.0
+    mounting: 0.9
+    perspective: 0.7
+    environment: 0.9
+    lighting: 0.8
+    material: 0.8
+  
+  # Normalize weights when composing multiple adapters
+  normalize_weights: true
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  
+  # Enable CORS for development
+  cors_enabled: true
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+  
+  # Static files directory
+  static_dir: static
+  
+  # Maximum upload size (10MB)
+  max_content_length: 10485760
+  
+  # Rate limiting
+  rate_limit_enabled: true
+  rate_limit_per_minute: 30
+
+# Data directories
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  splits_dir: data/splits
+  eval_dir: data/eval_sets
+  logos_dir: data/logos
+  backgrounds_dir: data/backgrounds
+
+# Output directories
+outputs:
+  training_runs_dir: outputs/training_runs
+  inference_runs_dir: outputs/inference_runs
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus_port: 9100
+  
+  # Metrics to track
+  track_latency: true
+  track_queue_depth: true
+  track_gpu_memory: true
+  track_adapter_usage: true
+
+# Logging configuration
+logging:
+  # Log format: json or text
+  format: json
+  
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO
+  
+  # Log file path (relative to outputs directory)
+  file: logs/app.log
+  
+  # Rotate logs
+  rotate: true
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# Safety and validation
+safety:
+  # Maximum prompt length
+  max_prompt_length: 1000
+  
+  # Blocked words (add words to block from prompts)
+  blocked_words: []
+  
+  # Validate uploaded images
+  validate_images: true
+  allowed_image_formats:
+    - png
+    - jpg
+    - jpeg
+    - webp
+  
+  # Maximum image dimensions for uploads
+  max_upload_width: 4096
+  max_upload_height: 4096

@@ -1,0 +1,55 @@
+# Lighting LoRA Training Configuration
+
+base_config: base_lora.yaml
+
+domain:
+  name: lighting
+  description: "Lighting conditions and effects"
+
+concepts:
+  - name: neon_glow
+    description: "Neon glow effect"
+    data_path: data/processed/lighting/neon_glow
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+      
+  - name: backlit
+    description: "Backlit/halo lighting"
+    data_path: data/processed/lighting/backlit
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+      
+  - name: daylight
+    description: "Natural daylight"
+    data_path: data/processed/lighting/daylight
+    recommended_weight: 0.7
+    training_overrides:
+      max_steps: 600
+      
+  - name: dramatic
+    description: "Dramatic/cinematic lighting"
+    data_path: data/processed/lighting/dramatic
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+      
+  - name: led_lit
+    description: "Modern LED illumination"
+    data_path: data/processed/lighting/led_lit
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+
+training_order:
+  - neon_glow
+  - backlit
+  - daylight
+  - dramatic
+  - led_lit
+
+batch:
+  parallel: false
+  continue_on_error: true
+  final_comparison: true

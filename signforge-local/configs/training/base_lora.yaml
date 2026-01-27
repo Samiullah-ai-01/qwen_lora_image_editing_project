@@ -1,0 +1,132 @@
+# Base LoRA Training Configuration
+# This is the base configuration for training any LoRA adapter
+
+# Training parameters
+training:
+  # Learning rate
+  learning_rate: 1.0e-4
+  
+  # Learning rate scheduler
+  lr_scheduler: cosine  # constant, linear, cosine, cosine_with_restarts
+  lr_warmup_steps: 100
+  
+  # Batch size (effective = batch_size * gradient_accumulation)
+  batch_size: 1
+  gradient_accumulation_steps: 4
+  
+  # Number of training steps
+  max_steps: 1000
+  
+  # Optimizer
+  optimizer: adamw  # adamw, adam8bit, prodigy
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_weight_decay: 0.01
+  adam_epsilon: 1.0e-8
+  
+  # Mixed precision
+  mixed_precision: bf16  # no, fp16, bf16
+  
+  # Gradient checkpointing for memory efficiency
+  gradient_checkpointing: true
+  
+  # Maximum gradient norm for clipping
+  max_grad_norm: 1.0
+  
+  # Random seed for reproducibility
+  seed: 42
+
+# LoRA-specific parameters
+lora:
+  # LoRA rank (lower = fewer parameters, faster training)
+  rank: 32
+  
+  # LoRA alpha (scaling factor)
+  alpha: 64
+  
+  # LoRA dropout
+  dropout: 0.1
+  
+  # Target modules in the model to apply LoRA
+  target_modules:
+    - to_q
+    - to_k
+    - to_v
+    - to_out.0
+    - proj_in
+    - proj_out
+  
+  # Initialize LoRA weights
+  init_weights: gaussian  # gaussian, kaiming
+
+# Data configuration
+data:
+  # Image resolution for training
+  resolution: 512
+  
+  # Center crop images
+  center_crop: true
+  
+  # Random horizontal flip (data augmentation)
+  random_flip: true
+  
+  # Caption dropout probability (for classifier-free guidance)
+  caption_dropout: 0.1
+  
+  # Number of data loader workers
+  num_workers: 4
+  
+  # Shuffle dataset
+  shuffle: true
+
+# Validation configuration
+validation:
+  # Validate every N steps
+  validate_every: 200
+  
+  # Number of validation samples to generate
+  num_samples: 4
+  
+  # Fixed prompts for validation (to track progress)
+  prompts:
+    - "A professional channel letter sign reading 'CAFE' on a brick wall"
+    - "Modern LED signage for a tech company"
+    - "Vintage neon sign at night"
+    - "Corporate building entrance sign"
+  
+  # Validation seed (for reproducibility)
+  seed: 42
+
+# Checkpointing
+checkpointing:
+  # Save checkpoint every N steps
+  save_every: 200
+  
+  # Keep only the last N checkpoints
+  keep_last: 3
+  
+  # Save optimizer state (for resuming)
+  save_optimizer: true
+
+# Export configuration
+export:
+  # Output format
+  format: safetensors  # safetensors, pytorch
+  
+  # Include metadata in export
+  include_metadata: true
+  
+  # Metadata to include
+  metadata:
+    - training_config
+    - dataset_hash
+    - final_loss
+    - training_steps
+
+# Hardware
+hardware:
+  # Device to use
+  device: auto  # auto, cuda, cuda:0, cpu
+  
+  # Number of GPUs (for future multi-GPU support)
+  num_gpus: 1

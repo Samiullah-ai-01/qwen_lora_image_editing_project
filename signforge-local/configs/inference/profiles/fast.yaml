@@ -1,0 +1,28 @@
+# Fast Inference Profile
+# Optimized for speed over quality
+
+generation:
+  steps: 15
+  guidance_scale: 6.0
+  width: 768
+  height: 576
+  scheduler: euler_a
+  seed: -1
+
+lora:
+  normalize_weights: true
+  max_adapters: 4
+
+conditioning:
+  logo_strength: 0.7
+  background_strength: 0.5
+
+quality:
+  vae_tiling: false
+  refiner_steps: 0
+  upscale_factor: 1
+
+output:
+  format: jpg
+  jpeg_quality: 85
+  save_metadata: true

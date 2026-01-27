@@ -1,0 +1,63 @@
+# Environment LoRA Training Configuration
+
+base_config: base_lora.yaml
+
+domain:
+  name: environment
+  description: "Scene context and location type"
+
+concepts:
+  - name: urban_storefront
+    description: "Urban street-level storefront"
+    data_path: data/processed/environment/urban_storefront
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 1000
+      
+  - name: mall_interior
+    description: "Indoor shopping mall"
+    data_path: data/processed/environment/mall_interior
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 1000
+      
+  - name: night
+    description: "Nighttime exterior"
+    data_path: data/processed/environment/night
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 1000
+      
+  - name: daytime
+    description: "Daylight exterior"
+    data_path: data/processed/environment/daytime
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 800
+      
+  - name: industrial
+    description: "Industrial/warehouse area"
+    data_path: data/processed/environment/industrial
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+      
+  - name: suburban
+    description: "Suburban shopping center"
+    data_path: data/processed/environment/suburban
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+
+training_order:
+  - urban_storefront
+  - mall_interior
+  - night
+  - daytime
+  - industrial
+  - suburban
+
+batch:
+  parallel: false
+  continue_on_error: true
+  final_comparison: true

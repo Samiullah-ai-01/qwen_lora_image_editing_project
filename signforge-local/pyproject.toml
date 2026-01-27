@@ -1,0 +1,151 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "signforge-local"
+version = "0.1.0"
+description = "Local-first signage mockup generator with multi-LoRA composition"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "SignForge Contributors"}
+]
+keywords = [
+    "machine-learning",
+    "image-generation",
+    "lora",
+    "signage",
+    "mockup",
+    "diffusion",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "diffusers>=0.25.0",
+    "transformers>=4.36.0",
+    "accelerate>=0.25.0",
+    "safetensors>=0.4.0",
+    "peft>=0.7.0",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "prometheus-client>=0.19.0",
+    "Pillow>=10.0.0",
+    "numpy>=1.24.0",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "tqdm>=4.66.0",
+    "structlog>=23.2.0",
+    "watchdog>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.6.0",
+    "httpx>=0.25.0",
+]
+xformers = [
+    "xformers>=0.0.23",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/signforge-local"
+Documentation = "https://github.com/your-org/signforge-local#readme"
+Repository = "https://github.com/your-org/signforge-local.git"
+Issues = "https://github.com/your-org/signforge-local/issues"
+
+[project.scripts]
+signforge = "signforge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+signforge = ["py.typed"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B008",   # do not perform function calls in argument defaults
+    "B905",   # zip strict
+]
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["ARG"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests that require GPU",
+    "integration: marks integration tests",
+    "e2e: marks end-to-end tests",
+]
+
+[tool.coverage.run]
+source = ["src/signforge"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

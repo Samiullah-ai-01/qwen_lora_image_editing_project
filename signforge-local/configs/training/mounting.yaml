@@ -1,0 +1,55 @@
+# Mounting Style LoRA Training Configuration
+
+base_config: base_lora.yaml
+
+domain:
+  name: mounting
+  description: "How signs are mounted to surfaces"
+
+concepts:
+  - name: flush_mount
+    description: "Signs mounted flat against a wall"
+    data_path: data/processed/mounting/flush_mount
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 800
+      
+  - name: raceway
+    description: "Signs on metal raceways containing wiring"
+    data_path: data/processed/mounting/raceway
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 800
+      
+  - name: standoffs
+    description: "Signs with metal standoff spacers"
+    data_path: data/processed/mounting/standoffs
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 800
+      
+  - name: hanging
+    description: "Hanging/suspended signs"
+    data_path: data/processed/mounting/hanging
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+      
+  - name: pole_mounted
+    description: "Signs on poles/posts"
+    data_path: data/processed/mounting/pole_mounted
+    recommended_weight: 0.8
+    training_overrides:
+      max_steps: 800
+
+training_order:
+  - flush_mount
+  - raceway
+  - standoffs
+  - hanging
+  - pole_mounted
+
+batch:
+  parallel: false
+  continue_on_error: true
+  final_comparison: true

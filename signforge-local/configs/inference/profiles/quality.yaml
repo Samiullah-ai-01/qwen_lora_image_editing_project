@@ -1,0 +1,29 @@
+# Quality Inference Profile
+# Optimized for quality over speed
+
+generation:
+  steps: 50
+  guidance_scale: 8.0
+  width: 1280
+  height: 960
+  scheduler: dpm++
+  seed: -1
+
+lora:
+  normalize_weights: true
+  max_adapters: 6
+
+conditioning:
+  logo_strength: 0.85
+  background_strength: 0.7
+  ip_adapter_scale: 0.8
+
+quality:
+  vae_tiling: true
+  refiner_steps: 10
+  upscale_factor: 1
+
+output:
+  format: png
+  jpeg_quality: 95
+  save_metadata: true

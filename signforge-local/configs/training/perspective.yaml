@@ -1,0 +1,55 @@
+# Perspective LoRA Training Configuration
+
+base_config: base_lora.yaml
+
+domain:
+  name: perspective
+  description: "Camera angle and viewpoint for sign shots"
+
+concepts:
+  - name: front
+    description: "Direct front-facing view"
+    data_path: data/processed/perspective/front
+    recommended_weight: 0.7
+    training_overrides:
+      max_steps: 600
+      
+  - name: angled
+    description: "45-degree angled view"
+    data_path: data/processed/perspective/angled
+    recommended_weight: 0.7
+    training_overrides:
+      max_steps: 600
+      
+  - name: street_level
+    description: "Looking up from street level"
+    data_path: data/processed/perspective/street_level
+    recommended_weight: 0.7
+    training_overrides:
+      max_steps: 600
+      
+  - name: wide
+    description: "Wide angle showing context"
+    data_path: data/processed/perspective/wide
+    recommended_weight: 0.6
+    training_overrides:
+      max_steps: 600
+      
+  - name: closeup
+    description: "Close-up detail shot"
+    data_path: data/processed/perspective/closeup
+    recommended_weight: 0.6
+    training_overrides:
+      max_steps: 600
+
+training_order:
+  - front
+  - angled
+  - street_level
+  - wide
+  - closeup
+
+batch:
+  parallel: false
+  continue_on_error: true
+  final_comparison: true

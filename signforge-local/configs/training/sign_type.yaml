@@ -1,0 +1,83 @@
+# Sign Type LoRA Training Configuration
+# Extends base_lora.yaml for sign type concepts
+
+# Inherit from base config
+base_config: base_lora.yaml
+
+# Domain metadata
+domain:
+  name: sign_type
+  description: "Type of signage (channel letters, box signs, etc.)"
+
+# Concepts to train in this domain
+concepts:
+  - name: channel_letters
+    description: "Individual 3D letters, typically illuminated"
+    data_path: data/processed/sign_type/channel_letters
+    recommended_weight: 1.0
+    training_overrides:
+      max_steps: 1500
+      
+  - name: box_sign
+    description: "Cabinet-style signs with internal illumination"
+    data_path: data/processed/sign_type/box_sign
+    recommended_weight: 1.0
+    training_overrides:
+      max_steps: 1200
+      
+  - name: halo_lit
+    description: "Backlit signs creating halo effect"
+    data_path: data/processed/sign_type/halo_lit
+    recommended_weight: 1.0
+    training_overrides:
+      max_steps: 1200
+      
+  - name: blade
+    description: "Projecting blade/flag signs"
+    data_path: data/processed/sign_type/blade
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 1000
+      
+  - name: monument
+    description: "Ground-mounted monument signs"
+    data_path: data/processed/sign_type/monument
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 1200
+      
+  - name: pylon
+    description: "Tall freestanding pylon signs"
+    data_path: data/processed/sign_type/pylon
+    recommended_weight: 0.9
+    training_overrides:
+      max_steps: 1000
+      
+  - name: neon
+    description: "Traditional neon tube signs"
+    data_path: data/processed/sign_type/neon
+    recommended_weight: 1.0
+    training_overrides:
+      max_steps: 1500
+      learning_rate: 8.0e-5
+
+# Training order (can specify dependencies)
+training_order:
+  - channel_letters
+  - box_sign
+  - halo_lit
+  - blade
+  - monument
+  - pylon
+  - neon
+
+# Batch training configuration
+batch:
+  # Run training sequentially or in parallel (if multi-GPU)
+  parallel: false
+  
+  # Continue on failure
+  continue_on_error: true
+  
+  # Generate comparison samples after all training
+  final_comparison: true

@@ -1,0 +1,36 @@
+# Core ML
+torch>=2.0.0
+torchvision>=0.15.0
+diffusers>=0.25.0
+transformers>=4.36.0
+accelerate>=0.25.0
+safetensors>=0.4.0
+peft>=0.7.0
+
+# Server
+flask>=3.0.0
+flask-cors>=4.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+prometheus-client>=0.19.0
+
+# Image processing
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# Configuration
+PyYAML>=6.0
+python-dotenv>=1.0.0
+
+# Utilities
+requests>=2.31.0
+tqdm>=4.66.0
+structlog>=23.2.0
+watchdog>=3.0.0
+
+# Optional: xformers for memory efficiency
+# Uncomment and adjust CUDA version as needed
+# xformers>=0.0.23
+
+# Optional: sentence-transformers for embeddings (assistant/drift)
+# sentence-transformers>=2.2.0

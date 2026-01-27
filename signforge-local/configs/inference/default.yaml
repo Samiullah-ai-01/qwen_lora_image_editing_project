@@ -1,0 +1,63 @@
+# Default Inference Configuration
+
+# Generation parameters
+generation:
+  # Number of inference steps
+  steps: 30
+  
+  # Classifier-free guidance scale
+  guidance_scale: 7.5
+  
+  # Default image dimensions
+  width: 1024
+  height: 768
+  
+  # Scheduler
+  scheduler: euler_a
+  
+  # Random seed (-1 for random)
+  seed: -1
+
+# LoRA composition
+lora:
+  # Default adapters to load (can be empty)
+  default_adapters: []
+  
+  # Normalize adapter weights
+  normalize_weights: true
+  
+  # Maximum adapters to compose
+  max_adapters: 6
+
+# Conditioning
+conditioning:
+  # Logo conditioning strength
+  logo_strength: 0.8
+  
+  # Background conditioning strength
+  background_strength: 0.6
+  
+  # IP-Adapter scale (if using)
+  ip_adapter_scale: 0.7
+
+# Quality settings
+quality:
+  # Use VAE tiling for large images
+  vae_tiling: false
+  
+  # Refiner steps (0 to disable)
+  refiner_steps: 0
+  
+  # Upscale factor (1 for no upscaling)
+  upscale_factor: 1
+
+# Output settings
+output:
+  # Output format
+  format: png
+  
+  # JPEG quality (if format is jpg)
+  jpeg_quality: 95
+  
+  # Save generation metadata
+  save_metadata: true
