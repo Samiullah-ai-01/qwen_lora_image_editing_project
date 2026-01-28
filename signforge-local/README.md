@@ -69,7 +69,7 @@ The fastest way to get started on any system. Requires [NVIDIA Container Toolkit
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/signforge-local.git
+git clone https://github.com/Samiullah-ai-01/qwen_lora_image_editing_project
 cd signforge-local
 
 # Launch the Imperial Studio
