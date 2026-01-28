@@ -48,12 +48,14 @@ def create_app(test_mode: bool = False) -> Flask:
     from signforge.server.routes.health import bp as health_bp
     from signforge.server.routes.metrics import bp as metrics_bp
     from signforge.server.routes.docs import bp as docs_bp
+    from signforge.server.routes.chat import bp as chat_bp
     
     app.register_blueprint(generate_bp)
     app.register_blueprint(adapters_bp)
     app.register_blueprint(health_bp)
     app.register_blueprint(metrics_bp)
     app.register_blueprint(docs_bp)
+    app.register_blueprint(chat_bp)
     
     # Index route - serve frontend
     @app.route("/")

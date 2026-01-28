@@ -21,6 +21,7 @@ export default defineConfig({
       '/health': 'http://localhost:8000',
       '/metrics': 'http://localhost:8000',
       '/runs': 'http://localhost:8000',
+      '/chat': 'http://localhost:8000',
     }
   }
 })

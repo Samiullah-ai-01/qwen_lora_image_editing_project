@@ -16,7 +16,10 @@ import {
     ChevronRight,
     History,
     Settings2,
-    Layers
+    Layers,
+    MessageCircle,
+    Send,
+    User
 } from 'lucide-react'
 
 // Types
@@ -69,6 +72,21 @@ function App() {
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
     const [health, setHealth] = useState<any>(null)
     const [showMonitor, setShowMonitor] = useState(false)
+    const [messages, setMessages] = useState<{ role: string, content: string }[]>([])
+    const [chatInput, setChatInput] = useState('')
+    const [isChatting, setIsChatting] = useState(false)
+    const [showChat, setShowChat] = useState(false)
+    const chatEndRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (showChat) {
+            scrollToBottom()
+        }
+    }, [messages, showChat])
+
+    const scrollToBottom = () => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
 
     useEffect(() => {
         fetchAdapters()
@@ -159,6 +177,28 @@ function App() {
                 setError('Link to the royal forge severed.')
             }
         }, 1000)
+    }
+
+    const handleChat = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!chatInput.trim() || isChatting) return
+
+        const userMsg = { role: 'user', content: chatInput }
+        setMessages(prev => [...prev, userMsg])
+        setChatInput('')
+        setIsChatting(true)
+
+        try {
+            const res = await axios.post('/chat', {
+                message: chatInput,
+                history: messages
+            })
+            setMessages(prev => [...prev, { role: 'assistant', content: res.data.response }])
+        } catch (err) {
+            setMessages(prev => [...prev, { role: 'assistant', content: "My cognitive link failed. Please retry your inquiry." }])
+        } finally {
+            setIsChatting(false)
+        }
     }
 
     return (
@@ -466,6 +506,97 @@ function App() {
                 <footer className="mt-24 pt-12 border-t border-white/5 text-center">
                     <p className="text-[10px] font-bold text-slate-700 uppercase tracking-[0.4em]">SignForge Local Studio &copy; 2026 — Crafted for Royalty</p>
                 </footer>
+            </div>
+
+            {/* Imperial Chat Assistant */}
+            <div className="fixed bottom-8 right-8 z-[100]">
+                <AnimatePresence>
+                    {showChat && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: 100, x: 50 }}
+                            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: 100, x: 50 }}
+                            className="absolute bottom-20 right-0 w-96 h-[500px] glass-panel rounded-[32px] overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/10"
+                        >
+                            <div className="p-6 border-b border-white/5 bg-white/2 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                                        <Sparkles className="w-4 h-4 text-amber-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-bold gold-gradient-text tracking-wide">FORGE ASSISTANT</h4>
+                                        <p className="text-[9px] text-green-500 font-bold uppercase tracking-widest">Neural Link Active</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowChat(false)} className="text-slate-500 hover:text-white transition-colors">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                                {messages.length === 0 && (
+                                    <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                                        <div className="w-12 h-12 rounded-full bg-white/2 border border-white/5 flex items-center justify-center mb-4">
+                                            <MessageCircle className="w-6 h-6 text-slate-700" />
+                                        </div>
+                                        <p className="text-xs text-slate-500 font-medium">Greetings. I am the Imperial Assistant. Ask me anything about signage design or using the forge.</p>
+                                    </div>
+                                )}
+                                {messages.map((msg, i) => (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        key={i}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div className={`max-w-[80%] p-4 rounded-2xl text-xs leading-relaxed ${msg.role === 'user'
+                                                ? 'bg-amber-500/10 border border-amber-500/20 text-amber-100 rounded-tr-none'
+                                                : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'
+                                            }`}>
+                                            {msg.content}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                                {isChatting && (
+                                    <div className="flex justify-start">
+                                        <div className="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none">
+                                            <Loader2 className="w-3 h-3 animate-spin text-amber-500/50" />
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={chatEndRef} />
+                            </div>
+
+                            <form onSubmit={handleChat} className="p-4 bg-white/2 border-t border-white/5">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={chatInput}
+                                        onChange={(e) => setChatInput(e.target.value)}
+                                        placeholder="Command the assistant..."
+                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl py-3 pl-4 pr-12 text-xs focus:border-amber-500/50 outline-none transition-all"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={isChatting || !chatInput.trim()}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-black disabled:opacity-30 transition-opacity"
+                                    >
+                                        <Send className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowChat(!showChat)}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-colors ${showChat ? 'bg-white/10 text-white' : 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'}`}
+                >
+                    {showChat ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+                </motion.button>
             </div>
         </div>
     )
