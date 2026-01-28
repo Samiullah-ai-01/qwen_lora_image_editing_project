@@ -274,6 +274,27 @@ class SignForgePipeline:
                 logger.info("sequential_cpu_offload_enabled")
             except Exception as e:
                 logger.warning("cpu_offload_failed", error=str(e))
+
+        # Tiny VAE Optimization
+        if self._config.model.use_tiny_vae:
+            try:
+                from diffusers import AutoencoderTiny
+                self._pipe.vae = AutoencoderTiny.from_pretrained(
+                    "madebyollin/taesdxl",
+                    torch_dtype=self._device_manager.dtype
+                ).to(self._device_manager.device)
+                logger.info("tiny_vae_enabled")
+            except Exception as e:
+                logger.warning("tiny_vae_failed", error=str(e))
+
+        # Turbo/Lightning Logic
+        if self._config.model.enable_turbo:
+            try:
+                from diffusers import LCMScheduler
+                self._pipe.scheduler = LCMScheduler.from_config(self._pipe.scheduler.config)
+                logger.info("turbo_mode_enabled")
+            except Exception as e:
+                logger.warning("turbo_mode_failed", error=str(e))
     
     def unload(self) -> None:
         """Unload the model and free memory."""
@@ -375,6 +396,14 @@ class SignForgePipeline:
         if seed == -1:
             seed = random.randint(0, 2**32 - 1)
         
+        # Turbo mode overrides
+        steps = request.steps
+        guidance_scale = request.guidance_scale
+        if self._config.model.enable_turbo:
+            steps = min(steps, 8) # Max 8 for turbo
+            guidance_scale = min(guidance_scale, 2.0) # Lower CFG for turbo
+            logger.debug("turbo_mode_active", steps=steps, guidance=guidance_scale)
+
         # Create generator
         generator = torch.Generator(device=self._device_manager.device).manual_seed(seed)
         
@@ -383,7 +412,7 @@ class SignForgePipeline:
             prompt=request.prompt[:100],
             seed=seed,
             resolution=f"{request.width}x{request.height}",
-            steps=request.steps,
+            steps=steps,
         )
         
         start_time = time.time()
@@ -392,20 +421,21 @@ class SignForgePipeline:
             # Build callback wrapper
             def step_callback(pipe: Any, step: int, timestep: Any, callback_kwargs: dict) -> dict:
                 if progress_callback:
-                    progress_callback(step, request.steps)
+                    progress_callback(step, steps)
                 return callback_kwargs
             
             # Generate
             if request.logo_image or request.background_image:
-                image = self._generate_conditioned(request, generator, step_callback)
+                # We need to update _generate_conditioned to take steps/guidance
+                image = self._generate_conditioned(request, generator, step_callback, steps=steps, guidance=guidance_scale)
             else:
                 result = self._pipe(
                     prompt=request.prompt,
                     negative_prompt=request.negative_prompt,
                     width=request.width,
                     height=request.height,
-                    num_inference_steps=request.steps,
-                    guidance_scale=request.guidance_scale,
+                    num_inference_steps=steps,
+                    guidance_scale=guidance_scale,
                     generator=generator,
                     callback_on_step_end=step_callback if progress_callback else None,
                 )
@@ -447,8 +477,13 @@ class SignForgePipeline:
         request: GenerationRequest,
         generator: torch.Generator,
         callback: Optional[Callable] = None,
+        steps: Optional[int] = None,
+        guidance: Optional[float] = None,
     ) -> Image.Image:
         """Generate image using logo and/or background conditioning."""
+        # Use provided steps/guidance or fallback to request
+        num_steps = steps if steps is not None else request.steps
+        guidance_scale = guidance if guidance is not None else request.guidance_scale
         from diffusers import StableDiffusionXLImg2ImgPipeline
         
         # 1. Prepare base image
@@ -501,8 +536,8 @@ class SignForgePipeline:
             negative_prompt=request.negative_prompt,
             image=base_image,
             strength=strength,
-            num_inference_steps=request.steps,
-            guidance_scale=request.guidance_scale,
+            num_inference_steps=num_steps,
+            guidance_scale=guidance_scale,
             generator=generator,
             callback_on_step_end=callback,
         )

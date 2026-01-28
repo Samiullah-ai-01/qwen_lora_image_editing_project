@@ -20,10 +20,16 @@ def health():
     
     memory = device_manager.get_memory_info()
     
+    from signforge.core.config import get_config
+    config = get_config()
+    model_path = config.get_absolute_path(config.model.base_path)
+    model_files_exist = (model_path / "model_index.json").exists()
+
     response = {
         "status": "healthy",
         "model_loaded": pipeline.is_loaded,
         "model_loading": pipeline.is_loading,
+        "model_files_exist": model_files_exist,
         "is_mock": pipeline.is_mock if pipeline.is_loaded else None,
         "device": str(device_manager.device),
         "dtype": str(device_manager.dtype),

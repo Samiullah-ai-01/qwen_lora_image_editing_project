@@ -38,6 +38,8 @@ class ModelConfig(BaseModel):
     use_xformers: bool = True
     attention_slicing: str = "auto"
     vae_tiling: bool = False
+    use_tiny_vae: bool = False
+    enable_turbo: bool = False
     cpu_offload: bool = False
 
 

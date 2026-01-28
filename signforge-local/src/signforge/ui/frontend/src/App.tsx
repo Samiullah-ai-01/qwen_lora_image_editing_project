@@ -203,6 +203,41 @@ function App() {
 
     return (
         <div className="min-h-screen relative">
+            {/* Model Safety Net Overlay */}
+            <AnimatePresence>
+                {health && health.model_files_exist === false && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[1000] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-6"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="max-w-xl w-full glass-panel rounded-[40px] p-12 text-center border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.1)]"
+                        >
+                            <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-8">
+                                <AlertCircle className="w-10 h-10 text-amber-500" />
+                            </div>
+                            <h2 className="text-3xl font-bold gold-gradient-text mb-4 tracking-tight uppercase">Imperial Forge Offline</h2>
+                            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                                The AI models are missing from your workstation. To ignite the forge, please ensure the models are downloaded.
+                            </p>
+
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left mb-8">
+                                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-3">Run this in your terminal:</p>
+                                <code className="text-xs text-slate-300 block bg-black/40 p-4 rounded-xl border border-white/5 font-mono">
+                                    python scripts/download_models.py
+                                </code>
+                            </div>
+
+                            <p className="text-[10px] text-slate-600 uppercase tracking-[0.3em] font-bold">SignForge Local v1.0.0 — Diagnostic Report</p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Ambient Background Elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-500/5 blur-[120px] rounded-full" />
@@ -550,8 +585,8 @@ function App() {
                                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div className={`max-w-[80%] p-4 rounded-2xl text-xs leading-relaxed ${msg.role === 'user'
-                                                ? 'bg-amber-500/10 border border-amber-500/20 text-amber-100 rounded-tr-none'
-                                                : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'
+                                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-100 rounded-tr-none'
+                                            : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'
                                             }`}>
                                             {msg.content}
                                         </div>
