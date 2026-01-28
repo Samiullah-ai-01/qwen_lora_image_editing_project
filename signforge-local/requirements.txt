@@ -6,6 +6,7 @@ transformers>=4.36.0
 accelerate>=0.25.0
 safetensors>=0.4.0
 peft>=0.7.0
+einops>=0.7.0
 
 # Server
 flask>=3.0.0

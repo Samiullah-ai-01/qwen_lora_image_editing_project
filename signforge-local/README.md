@@ -37,7 +37,8 @@ A premium design experience featuring **Champagne Gold & Royal Navy** aesthetics
 - **Multi-LoRA Stacking**: Combine multiple specialized adapters (Sign Types, Materials, Lighting) in a single generation.
 - **Latent Space Optimization**: Native support for `bf16` precision and `xformers` to minimize memory footprint.
 
-### 🛡️ Production Readiness
+### 🛡️ Production Readiness & Intelligence
+- **Imperial Neural Assistant**: A built-in, lightweight LLM (`SmolLM-135M`) that acts as a domain expert for signage design and prompt engineering.
 - **18 Comprehensive Tests**: Automated Unit, Integration, and E2E coverage.
 - **Prometheus Metrics**: Built-in observability for latency, throughput, and system health.
 - **Docker Orchestration**: Instant deployment on any system with NVIDIA support.
@@ -55,6 +56,8 @@ graph TD
     D --> F[LoRA Manager]
     F --> G[Multi-Adapter Composition]
     G --> H[Final Imperial Mockup]
+    A --> I[Neural Assistant]
+    I --> J[SmolLM-135M Engine]
 ```
 
 ---
@@ -98,6 +101,15 @@ SignForge exposes a robust REST API for automation and integration.
   "background_image_b64": "data:image/png;base64,...",
   "adapters": ["sign_type/neon", "material/marble"],
   "steps": 30
+}
+```
+
+### Conversational Intelligence
+`POST /chat`
+```json
+{
+  "message": "What is the best material for a back-lit sign?",
+  "history": []
 }
 ```
 
