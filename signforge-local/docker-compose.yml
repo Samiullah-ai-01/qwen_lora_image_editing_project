@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  signforge:
+    build: .
+    image: signforge-local:latest
+    container_name: signforge-studio
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    volumes:
+      - ./models:/app/models
+      - ./outputs:/app/outputs
+      - ./configs:/app/configs
+    environment:
+      - SIGNFORGE_MOCK=0
+    restart: unless-stopped

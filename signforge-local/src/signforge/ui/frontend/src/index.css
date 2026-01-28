@@ -50,7 +50,7 @@
   }
 
   .royal-button {
-    @apply relative overflow-hidden bg-gradient-to-r from-amber-600 to-yellow-400 text-black font-bold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(217, 119, 6, 0.3)];
+    @apply relative overflow-hidden bg-gradient-to-r from-amber-600 to-yellow-300 text-black font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl;
   }
 
   .royal-input {
