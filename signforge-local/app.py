@@ -85,17 +85,33 @@ def bootstrap():
         except Exception as e:
             print(f">>> [UI ERROR] Failed to build frontend: {e}")
 
+    # 5. Assistant Model Pre-cache
+    try:
+        from signforge.assistant.service import get_assistant
+        print(">>> [ASSISTANT] Verifying Neural Assistant weights...")
+        get_assistant()
+    except Exception as e:
+        print(f">>> [ASSISTANT] Note: Assistant pre-load skipped ({e})")
+
 def main():
     # Setting up PYTHONPATH for internal modules
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
 
     from signforge.version import __version__, __codename__
+    from signforge.core.device import get_device_manager
+    
+    device_mgr = get_device_manager()
+    mem = device_mgr.get_memory_info()
     
     print("\n" + "="*50)
     print(f"       SIGNFORGE STUDIO v{__version__} '{__codename__}'")
     print("="*50)
     print(f"Workspace: {ROOT_DIR}")
+    print(f"Engine:    {device_mgr.device} ({device_mgr.dtype})")
+    if device_mgr.is_cuda_available:
+        print(f"VRAM:      {mem.get('total_gb', 0):.1f} GB Total / {mem.get('free_gb', 0):.1f} GB Free")
+    print("-" * 50)
     
     # Final check: Ensure we can at least find our core server
     try:

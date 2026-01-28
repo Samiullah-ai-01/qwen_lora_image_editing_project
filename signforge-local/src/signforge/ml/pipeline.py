@@ -260,10 +260,20 @@ class SignForgePipeline:
                 self._pipe.enable_attention_slicing(slice_size)
             logger.debug("attention_slicing_enabled", slice_size=slice_size)
         
-        # VAE tiling
+        # VAE tiling & slicing (Critical for low VRAM high-res)
         if settings["vae_tiling"] or self._config.model.vae_tiling:
             self._pipe.enable_vae_tiling()
-            logger.debug("vae_tiling_enabled")
+            self._pipe.enable_vae_slicing()
+            logger.debug("vae_tiling_and_slicing_enabled")
+        
+        # Model CPU Offload (For extremely low VRAM systems)
+        if self._config.model.cpu_offload and self._device_manager.is_cuda_available:
+            try:
+                # This moves parts of the model to CPU when not in use
+                self._pipe.enable_model_cpu_offload()
+                logger.info("sequential_cpu_offload_enabled")
+            except Exception as e:
+                logger.warning("cpu_offload_failed", error=str(e))
     
     def unload(self) -> None:
         """Unload the model and free memory."""
