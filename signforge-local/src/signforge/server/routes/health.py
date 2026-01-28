@@ -23,6 +23,7 @@ def health():
     response = {
         "status": "healthy",
         "model_loaded": pipeline.is_loaded,
+        "model_loading": pipeline.is_loading,
         "is_mock": pipeline.is_mock if pipeline.is_loaded else None,
         "device": str(device_manager.device),
         "dtype": str(device_manager.dtype),

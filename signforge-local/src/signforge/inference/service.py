@@ -13,6 +13,7 @@ from signforge.core.config import get_config
 from signforge.core.logging import get_logger, log_to_file
 from signforge.ml.pipeline import SignForgePipeline, GenerationRequest, get_pipeline
 from signforge.ml.lora_manager import get_lora_manager
+from signforge.monitoring.prometheus import track_generation, update_queue_metrics, update_gpu_metrics
 from signforge.inference.queue import InferenceQueue, QueueItem
 
 logger = get_logger(__name__)
@@ -100,7 +101,34 @@ class InferenceService:
         status["session_id"] = self._session_id
         if self._pipeline:
             status["pipeline"] = self._pipeline.get_status()
+        
+        # Update prometheus metrics
+        update_queue_metrics(status.get("queue_size", 0), status.get("max_size", 10))
+        if status.get("pipeline"):
+            p_status = status["pipeline"]
+            if "gpu_memory" in p_status:
+                mem = p_status["gpu_memory"]
+                update_gpu_metrics(
+                    int(mem.get("allocated_gb", 0) * 1024 * 1024 * 1024),
+                    int(mem.get("total_gb", 0) * 1024 * 1024 * 1024)
+                )
+        
         return status
+
+    def _decode_image(self, b64_str: Optional[str]) -> Optional[Image.Image]:
+        """Decode base64 string to PIL Image."""
+        if not b64_str:
+            return None
+        import base64
+        from io import BytesIO
+        try:
+            if "base64," in b64_str:
+                b64_str = b64_str.split("base64,")[1]
+            img_data = base64.b64decode(b64_str)
+            return Image.open(BytesIO(img_data)).convert("RGB")
+        except Exception as e:
+            logger.error("image_decode_failed", error=str(e))
+            return None
 
     def _process_item(self, item: QueueItem) -> dict:
         """Process a queue item."""
@@ -122,6 +150,8 @@ class InferenceService:
             adapters=request.get("adapters", []),
             adapter_weights=request.get("adapter_weights", []),
             normalize_weights=request.get("normalize_weights", True),
+            logo_image=self._decode_image(request.get("logo_image_b64")),
+            background_image=self._decode_image(request.get("background_image_b64")),
         )
 
         # Load adapters if needed
@@ -149,6 +179,14 @@ class InferenceService:
         metadata["item_id"] = item.id
         metadata["image_path"] = str(image_path)
         self._log_metadata(metadata)
+
+        # Track metrics
+        track_generation(
+            gen_request.steps,
+            gen_request.width,
+            gen_request.height,
+            gen_request.adapters,
+        )
 
         return {
             "image_path": str(image_path),

@@ -142,6 +142,7 @@ class SignForgePipeline:
         self._device_manager = get_device_manager()
         self._pipe: Any = None
         self._loaded_adapters: list[str] = []
+        self._loading = False
         
         # Don't auto-load - wait for explicit load call
         logger.info("pipeline_created", device=str(self._device_manager.device))
@@ -164,6 +165,12 @@ class SignForgePipeline:
             logger.debug("pipeline_already_loaded")
             return
         
+        if self._loading:
+            logger.debug("pipeline_load_in_progress")
+            return
+
+        self._loading = True
+        
         model_path = self._config.get_absolute_path(self._config.model.base_path)
         logger.info("loading_model", path=str(model_path))
         
@@ -181,17 +188,20 @@ class SignForgePipeline:
                 load_kwargs["variant"] = "fp16"
 
             if model_path.exists():
+                logger.info("loading_from_local_disk", path=str(model_path))
                 self._pipe = StableDiffusionXLPipeline.from_pretrained(
                     str(model_path),
+                    local_files_only=True,
                     **load_kwargs
                 )
             else:
-                logger.info("downloading_model", model_id=self._config.model.hf_model_id)
+                logger.info("downloading_from_hub", model_id=self._config.model.hf_model_id)
                 self._pipe = StableDiffusionXLPipeline.from_pretrained(
                     self._config.model.hf_model_id,
                     **load_kwargs
                 )
-                self._pipe.save_pretrained(model_path)
+                logger.info("saving_model_to_local_disk", path=str(model_path))
+                self._pipe.save_pretrained(str(model_path))
             
             # Move to device
             self._pipe = self._pipe.to(self._device_manager.device)
@@ -208,12 +218,16 @@ class SignForgePipeline:
         except Exception as e:
             logger.error("model_load_failed", error=str(e))
             raise ModelError(f"Failed to load diffusion model: {e}")
+        finally:
+            self._loading = False
+    
+    @property
+    def is_loading(self) -> bool:
+        """Check if the pipeline is currently loading."""
+        return self._loading
     
     def _apply_optimizations(self) -> None:
         """Apply memory and performance optimizations."""
-        if self._is_mock:
-            return
-        
         settings = self._device_manager.get_recommended_settings()
         
         # xformers
@@ -331,6 +345,8 @@ class SignForgePipeline:
         
         # Ensure pipeline is loaded
         if not self.is_loaded:
+            if self.is_loading:
+                raise InferenceError("Model is still loading... please wait.", step="model_loading")
             self.load()
         
         # Determine seed
@@ -359,18 +375,20 @@ class SignForgePipeline:
                 return callback_kwargs
             
             # Generate
-            result = self._pipe(
-                prompt=request.prompt,
-                negative_prompt=request.negative_prompt,
-                width=request.width,
-                height=request.height,
-                num_inference_steps=request.steps,
-                guidance_scale=request.guidance_scale,
-                generator=generator,
-                callback_on_step_end=step_callback if progress_callback else None,
-            )
-            
-            image = result.images[0]
+            if request.logo_image or request.background_image:
+                image = self._generate_conditioned(request, generator, step_callback)
+            else:
+                result = self._pipe(
+                    prompt=request.prompt,
+                    negative_prompt=request.negative_prompt,
+                    width=request.width,
+                    height=request.height,
+                    num_inference_steps=request.steps,
+                    guidance_scale=request.guidance_scale,
+                    generator=generator,
+                    callback_on_step_end=step_callback if progress_callback else None,
+                )
+                image = result.images[0]
             generation_time = int((time.time() - start_time) * 1000)
             
             logger.info(
@@ -403,6 +421,73 @@ class SignForgePipeline:
             logger.error("generation_failed", error=str(e))
             raise InferenceError(f"Generation failed: {e}", step="inference")
     
+    def _generate_conditioned(
+        self,
+        request: GenerationRequest,
+        generator: torch.Generator,
+        callback: Optional[Callable] = None,
+    ) -> Image.Image:
+        """Generate image using logo and/or background conditioning."""
+        from diffusers import StableDiffusionXLImg2ImgPipeline
+        
+        # 1. Prepare base image
+        if request.background_image:
+            base_image = request.background_image.resize((request.width, request.height), Image.LANCZOS)
+        else:
+            # Create a neutral gray/canvas background if none provided
+            base_image = Image.new("RGB", (request.width, request.height), (200, 200, 200))
+
+        # 2. Composite logo if provided
+        if request.logo_image:
+            logo = request.logo_image.convert("RGBA")
+            # Scale logo to reasonable size (max 40% of canvas)
+            max_logo_dim = int(min(request.width, request.height) * 0.4)
+            logo.thumbnail((max_logo_dim, max_logo_dim), Image.LANCZOS)
+            
+            # Place in center (standard signboard location)
+            offset = (
+                (request.width - logo.width) // 2,
+                (request.height - logo.height) // 2
+            )
+            
+            # Create a simple white rectangular "backing" for the sign if we have a background
+            if request.background_image:
+                draw_img = Image.new("RGBA", (request.width, request.height), (0, 0, 0, 0))
+                from PIL import ImageDraw
+                padding = 20
+                draw = ImageDraw.Draw(draw_img)
+                draw.rectangle(
+                    [
+                        offset[0] - padding, offset[1] - padding,
+                        offset[0] + logo.width + padding, offset[1] + logo.height + padding
+                    ],
+                    fill=(255, 255, 255, 255)
+                )
+                base_image.paste(draw_img, (0, 0), draw_img)
+
+            base_image.paste(logo, offset, logo)
+
+        # 3. Create Img2Img pipeline from current text2img pipeline
+        # This sharing of components is efficient and recommended by diffusers
+        img2img_pipe = StableDiffusionXLImg2ImgPipeline(**self._pipe.components)
+        
+        # 4. Run through model to homogenize lighting and texture
+        # Lower strength (0.3-0.5) preserves the structure but blends the elements
+        strength = request.logo_strength if request.logo_image else 0.4
+        
+        result = img2img_pipe(
+            prompt=request.prompt,
+            negative_prompt=request.negative_prompt,
+            image=base_image,
+            strength=strength,
+            num_inference_steps=request.steps,
+            guidance_scale=request.guidance_scale,
+            generator=generator,
+            callback_on_step_end=callback,
+        )
+        
+        return result.images[0]
+
     def get_status(self) -> dict[str, Any]:
         """Get pipeline status."""
         memory = self._device_manager.get_memory_info()

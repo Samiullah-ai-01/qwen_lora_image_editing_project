@@ -19,6 +19,8 @@ class GenerateRequest(BaseModel):
     adapters: list[str] = Field(default_factory=list)
     adapter_weights: list[float] = Field(default_factory=list)
     normalize_weights: bool = Field(default=True)
+    logo_image_b64: Optional[str] = Field(default=None)
+    background_image_b64: Optional[str] = Field(default=None)
     profile: Optional[str] = Field(default=None)
 
     class Config:

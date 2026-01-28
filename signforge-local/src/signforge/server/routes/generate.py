@@ -16,9 +16,14 @@ bp = Blueprint("generate", __name__)
 @bp.route("/generate", methods=["POST"])
 def generate():
     """Submit a generation request."""
+    import time
+    from signforge.monitoring.prometheus import track_request
+    
+    start_time = time.time()
     try:
         data = request.get_json()
         if not data:
+            track_request("error", time.time() - start_time)
             return jsonify({"error": "No JSON data provided"}), 400
         
         # Validate with Pydantic
@@ -28,13 +33,17 @@ def generate():
         service = get_service()
         result = service.submit(req.model_dump())
         
+        track_request("success", time.time() - start_time)
         return jsonify(result), 202
         
     except PydanticError as e:
+        track_request("validation_error", time.time() - start_time)
         return jsonify({"error": "Validation error", "details": e.errors()}), 400
     except QueueFullError as e:
+        track_request("queue_full", time.time() - start_time)
         return jsonify(e.to_dict()), 429
     except Exception as e:
+        track_request("error", time.time() - start_time)
         logger.error("generate_error", error=str(e))
         return jsonify({"error": str(e)}), 500
 
