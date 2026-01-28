@@ -171,8 +171,19 @@ class SignForgePipeline:
 
         self._loading = True
         
+        from signforge.version import __version__
         model_path = self._config.get_absolute_path(self._config.model.base_path)
-        logger.info("loading_model", path=str(model_path))
+        logger.info("pipeline_loading_start", version=__version__, path=str(model_path))
+        
+        # Verify model files exist
+        if not self.is_mock and not (model_path / "model_index.json").exists():
+            logger.error("model_files_missing", path=str(model_path))
+            print("\n" + "!"*60)
+            print("  FATAL ERROR: BASE MODEL FILES NOT FOUND")
+            print(f"  Expected at: {model_path}")
+            print("\n  Please run: python scripts/download_models.py")
+            print("!"*60 + "\n")
+            raise FileNotFoundError(f"Model files not found at {model_path}")
         
         try:
             from diffusers import StableDiffusionXLPipeline
